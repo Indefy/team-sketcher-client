@@ -1,0 +1,39 @@
+.toolbar-container {
+	display: flex;
+	justify-content: space-between;
+	background: rgba(255, 255, 255, 0.8);
+	padding: 10px;
+	backdrop-filter: blur(10px);
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	position: fixed;
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1000;
+}
+
+.toolbar-button {
+	padding: 10px;
+	margin: 0 5px;
+	background: #4caf50;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background 0.3s ease;
+
+	&:hover {
+		background: #45a049;
+	}
+}
+
+.color-picker {
+	margin: 0 5px;
+	padding: 1.3rem auto;
+}
+
+.brush-size {
+	height: 1.6rem;
+	margin: 0 5px;
+}
