@@ -1,5 +1,7 @@
-	Team Sketcher client - this is the client of the app serving as the frontend running using React framework.
+#team-sketcher-server
  
+Team Sketcher client - this is the client of the app serving as the frontend running using React framework.
+
 A whiteboard collaboration app lets multiple users work together on a virtual whiteboard in real-time.
 They can draw, write, and edit content simultaneously, making it a useful tool for remote teams, students, and educators.
 
