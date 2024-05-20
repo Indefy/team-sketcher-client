@@ -13,20 +13,22 @@ const AuthProvider = ({ children }) => {
 		const token = localStorage.getItem("token");
 		if (token) {
 			axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-			setUser(true);
+			const storedUser = JSON.parse(localStorage.getItem("user"));
+			setUser(storedUser);
 		}
 	}, []);
 
-	// Navigate to the whiteboard page after login
 	const login = async (username, password, navigate) => {
 		try {
 			const { data } = await axios.post(
 				`${process.env.REACT_APP_SERVER_URL}/api/auth/login`,
 				{ username, password }
 			);
+			const userWithProfile = { username, profilePic: "default.png" };
 			localStorage.setItem("token", data.token);
+			localStorage.setItem("user", JSON.stringify(userWithProfile));
 			axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-			setUser(true);
+			setUser(userWithProfile);
 			setError(null);
 			navigate("/");
 		} catch (error) {
@@ -34,16 +36,17 @@ const AuthProvider = ({ children }) => {
 		}
 	};
 
-	// Navigate to the whiteboard page after registration
 	const register = async (username, password, navigate) => {
 		try {
 			const { data } = await axios.post(
 				`${process.env.REACT_APP_SERVER_URL}/api/auth/register`,
 				{ username, password }
 			);
+			const userWithProfile = { username, profilePic: "default.png" };
 			localStorage.setItem("token", data.token);
+			localStorage.setItem("user", JSON.stringify(userWithProfile));
 			axios.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
-			setUser(true);
+			setUser(userWithProfile);
 			setError(null);
 			navigate("/");
 		} catch (error) {
@@ -51,9 +54,9 @@ const AuthProvider = ({ children }) => {
 		}
 	};
 
-	// Navigate to the login page after logout
 	const logout = () => {
 		localStorage.removeItem("token");
+		localStorage.removeItem("user");
 		delete axios.defaults.headers.common["Authorization"];
 		setUser(null);
 		setError(null);

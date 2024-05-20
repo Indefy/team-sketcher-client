@@ -1,13 +1,14 @@
 import React from "react";
+import ThemeSelector from "./ThemeSelector";
 import "../styles/Toolbar.scss";
 
 const Toolbar = ({
 	onNewPage,
 	onSavePage,
 	onSharePage,
-	onBrushSizeChange,
-	onColorChange,
-	onBackdropColorChange,
+	onUndo,
+	onRedo,
+	onExport,
 }) => {
 	return (
 		<div className="toolbar-container">
@@ -20,26 +21,22 @@ const Toolbar = ({
 			<button className="toolbar-button" onClick={onSharePage}>
 				Share Page
 			</button>
-			<input
-				className="color-picker"
-				type="color"
-				onChange={(e) => onColorChange(e.target.value)}
-			/>
-			<input
-				className="color-picker"
-				type="color"
-				onChange={(e) => onBackdropColorChange(e.target.value)}
-			/>
-			<select
-				className="brush-size"
-				onChange={(e) => onBrushSizeChange(e.target.value)}
-			>
-				<option value="2">2px</option>
-				<option value="4">4px</option>
-				<option value="6">6px</option>
-				<option value="8">8px</option>
-				<option value="10">10px</option>
-			</select>
+			<button className="toolbar-button" onClick={onUndo}>
+				Undo
+			</button>
+			<button className="toolbar-button" onClick={onRedo}>
+				Redo
+			</button>
+			<button className="toolbar-button" onClick={() => onExport("png")}>
+				Export PNG
+			</button>
+			<button className="toolbar-button" onClick={() => onExport("jpeg")}>
+				Export JPEG
+			</button>
+			<button className="toolbar-button" onClick={() => onExport("pdf")}>
+				Export PDF
+			</button>
+			<ThemeSelector />
 		</div>
 	);
 };
