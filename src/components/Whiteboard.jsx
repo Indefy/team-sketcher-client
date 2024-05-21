@@ -1,19 +1,27 @@
-import React, { useRef, useEffect, useContext, useState } from "react";
+import React, {
+	useRef,
+	useEffect,
+	useContext,
+	useState,
+	useCallback,
+} from "react";
 import io from "socket.io-client";
 import { AuthContext } from "../context/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { jsPDF } from "jspdf";
 import Toolbar from "./Toolbar";
 import UserToolbar from "./UserToolbar";
 import UserList from "./UserList";
 import "../styles/Whiteboard.scss";
+import { useWhiteboardContext } from "../context/WhiteboardContext";
 
 const socket = io(process.env.REACT_APP_SERVER_URL);
 
 const Whiteboard = () => {
+	const { brushSize, brushType, color, setBrushSize, setBrushType, setColor } =
+		useWhiteboardContext();
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
-	const [brushSize, setBrushSize] = useState(5);
-	const [color, setColor] = useState("black");
 	const [backdropColor, setBackdropColor] = useState("#ffffff");
 	const { user, logout } = useContext(AuthContext);
 	const navigate = useNavigate();
@@ -22,8 +30,86 @@ const Whiteboard = () => {
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isDrawing, setIsDrawing] = useState(false);
 
+	const handleUpdateUsers = (connectedUsers) => {
+		const uniqueUsers = connectedUsers.filter(
+			(value, index, self) =>
+				index === self.findIndex((u) => u.username === value.username)
+		);
+		setUsers(uniqueUsers);
+	};
+
+	const applyBrushSettings = useCallback(
+		(context, brushType, brushSize, color) => {
+			// Resetting context properties
+			context.setLineDash([]);
+			context.globalAlpha = 1.0;
+			context.shadowBlur = 0;
+			context.shadowColor = "rgba(0, 0, 0, 0)";
+			context.lineJoin = "round"; // Default line join style
+
+			context.lineWidth = brushSize;
+			context.strokeStyle = color;
+
+			switch (brushType) {
+				case "round":
+					context.lineCap = "round";
+					break;
+				case "square":
+					context.lineCap = "butt";
+					break;
+				case "dotted":
+					context.lineCap = "round";
+					context.setLineDash([brushSize, brushSize]);
+					break;
+				case "pattern":
+					// Add pattern or custom texture logic here
+					break;
+				case "fuzzy":
+					context.globalAlpha = 0.2;
+					context.lineWidth = brushSize * 3;
+					break;
+				case "calligraphy":
+					context.lineCap = "butt";
+					context.lineJoin = "miter";
+					break;
+				case "gradient":
+					const gradient = context.createLinearGradient(0, 0, 170, 0);
+					gradient.addColorStop(0, color);
+					gradient.addColorStop(1, "white");
+					context.strokeStyle = gradient;
+					break;
+				case "shadow":
+					context.lineCap = "round";
+					context.shadowBlur = 10;
+					context.shadowColor = "rgba(0, 0, 0, 0.5)";
+					break;
+				default:
+					context.lineCap = "round";
+					break;
+			}
+		},
+		[]
+	);
+
+	const onDrawingEvent = useCallback(
+		(data) => {
+			const { x0, y0, x1, y1, color, brushSize, brushType } = data;
+			const context = contextRef.current;
+			applyBrushSettings(context, brushType, brushSize, color);
+
+			context.beginPath();
+			context.moveTo(x0, y0);
+			context.lineTo(x1, y1);
+			context.stroke();
+		},
+		[applyBrushSettings]
+	);
+
 	useEffect(() => {
-		if (!user) return;
+		if (!user) {
+			navigate("/login");
+			return;
+		}
 
 		const canvas = canvasRef.current;
 		const fixedWidth = 1280;
@@ -35,7 +121,6 @@ const Whiteboard = () => {
 
 		const context = canvas.getContext("2d");
 		context.scale(2, 2);
-		context.lineCap = "round";
 		contextRef.current = context;
 
 		socket.emit("userJoined", user);
@@ -46,48 +131,14 @@ const Whiteboard = () => {
 			socket.off("updateUsers", handleUpdateUsers);
 			socket.off("drawing", onDrawingEvent);
 		};
-	}, [user]);
-
-	const handleUpdateUsers = (connectedUsers) => {
-		const uniqueUsers = connectedUsers.filter(
-			(value, index, self) =>
-				index === self.findIndex((u) => u.username === value.username)
-		);
-		setUsers(uniqueUsers);
-	};
+	}, [user, navigate, onDrawingEvent]);
 
 	useEffect(() => {
-		if (contextRef.current) {
-			contextRef.current.strokeStyle = color;
+		const context = contextRef.current;
+		if (context) {
+			applyBrushSettings(context, brushType, brushSize, color);
 		}
-	}, [color]);
-
-	useEffect(() => {
-		if (contextRef.current) {
-			contextRef.current.lineWidth = brushSize;
-		}
-	}, [brushSize]);
-
-	useEffect(() => {
-		console.log(`Canvas history: `, canvasHistory);
-		console.log(`History index: ${historyIndex}`);
-	}, [canvasHistory, historyIndex]);
-
-	if (!user) {
-		return <Navigate to="/login" />;
-	}
-
-	const onDrawingEvent = (data) => {
-		const canvas = canvasRef.current;
-		const context = canvas.getContext("2d");
-		const { x0, y0, x1, y1, color, brushSize } = data;
-		context.strokeStyle = color;
-		context.lineWidth = brushSize;
-		context.beginPath();
-		context.moveTo(x0, y0);
-		context.lineTo(x1, y1);
-		context.stroke();
-	};
+	}, [brushSize, brushType, color, applyBrushSettings]);
 
 	const handleMouseDown = ({ nativeEvent }) => {
 		const { offsetX, offsetY } = nativeEvent;
@@ -104,11 +155,12 @@ const Whiteboard = () => {
 		const y0 = canvasRef.current.lastY;
 		const x1 = offsetX;
 		const y1 = offsetY;
+		const data = { x0, y0, x1, y1, color, brushSize, brushType };
 		contextRef.current.beginPath();
 		contextRef.current.moveTo(x0, y0);
 		contextRef.current.lineTo(x1, y1);
 		contextRef.current.stroke();
-		socket.emit("drawing", { x0, y0, x1, y1, color, brushSize });
+		socket.emit("drawing", data);
 		canvasRef.current.lastX = offsetX;
 		canvasRef.current.lastY = offsetY;
 	};
@@ -127,8 +179,6 @@ const Whiteboard = () => {
 		newHistory.push(dataUrl);
 		setCanvasHistory(newHistory);
 		setHistoryIndex(newHistory.length - 1);
-		console.log(`History updated: `, newHistory);
-		console.log(`New history index: ${newHistory.length - 1}`);
 	};
 
 	const handleNewPage = () => {
@@ -137,20 +187,16 @@ const Whiteboard = () => {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		setCanvasHistory([]);
 		setHistoryIndex(-1);
-		console.log(`New page created. History cleared.`);
 	};
 
 	const handleSavePage = () => {
 		const canvas = canvasRef.current;
-
 		const tempCanvas = document.createElement("canvas");
 		const tempContext = tempCanvas.getContext("2d");
 		tempCanvas.width = canvas.width;
 		tempCanvas.height = canvas.height;
-
 		tempContext.fillStyle = backdropColor;
 		tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
 		tempContext.drawImage(canvas, 0, 0);
 
 		const link = document.createElement("a");
@@ -163,27 +209,9 @@ const Whiteboard = () => {
 		alert("Share functionality to be implemented");
 	};
 
-	const handleLogout = () => {
-		socket.emit("userLeft", user);
-		logout(navigate);
-		setUsers([]); // Clear user list on logout to prevent stale data
-		console.log("User logged out and users state reset.");
-	};
-
-	const handleBrushSizeChange = (size) => {
-		setBrushSize(size);
-		console.log(`Brush size changed to: ${size}`);
-	};
-
-	const handleColorChange = (color) => {
-		setColor(color);
-		console.log(`Color changed to: ${color}`);
-	};
-
 	const handleBackdropColorChange = (color) => {
 		setBackdropColor(color);
 		document.documentElement.style.setProperty("--backdrop-color", color);
-		console.log(`Backdrop color changed to: ${color}`);
 	};
 
 	const handleUndo = () => {
@@ -191,14 +219,10 @@ const Whiteboard = () => {
 			const newIndex = historyIndex - 1;
 			setHistoryIndex(newIndex);
 			restoreCanvas(canvasHistory[newIndex]);
-			console.log(`Undo action performed. New history index: ${newIndex}`);
 		} else if (historyIndex === 0) {
 			const newIndex = historyIndex - 1;
 			setHistoryIndex(newIndex);
 			clearCanvas();
-			console.log(`Undo action performed. Canvas cleared.`);
-		} else {
-			console.log(`Undo action ignored. No more history to undo.`);
 		}
 	};
 
@@ -207,9 +231,6 @@ const Whiteboard = () => {
 			const newIndex = historyIndex + 1;
 			setHistoryIndex(newIndex);
 			restoreCanvas(canvasHistory[newIndex]);
-			console.log(`Redo action performed. New history index: ${newIndex}`);
-		} else {
-			console.log(`Redo action ignored. No more history to redo.`);
 		}
 	};
 
@@ -221,7 +242,6 @@ const Whiteboard = () => {
 		img.onload = () => {
 			context.clearRect(0, 0, canvas.width, canvas.height);
 			context.drawImage(img, 0, 0, canvas.width / 2, canvas.height / 2);
-			console.log(`Canvas restored from history.`);
 		};
 	};
 
@@ -229,16 +249,39 @@ const Whiteboard = () => {
 		const canvas = canvasRef.current;
 		const context = canvas.getContext("2d");
 		context.clearRect(0, 0, canvas.width, canvas.height);
-		console.log(`Canvas cleared.`);
 	};
 
 	const handleExport = (format) => {
 		const canvas = canvasRef.current;
 		const link = document.createElement("a");
-		link.href = canvas.toDataURL(`image/${format}`);
-		link.download = `whiteboard.${format}`;
+
+		if (format === "png") {
+			link.href = canvas.toDataURL("image/png");
+			link.download = "whiteboard.png";
+		} else if (format === "jpeg") {
+			link.href = canvas.toDataURL("image/jpeg");
+			link.download = "whiteboard.jpeg";
+		} else if (format === "pdf") {
+			const canvasWidth = canvas.width / 2; // Divide by 2 to account for the scaling applied to the canvas
+			const canvasHeight = canvas.height / 2; // Divide by 2 to account for the scaling applied to the canvas
+			const pdf = new jsPDF({
+				orientation: canvasWidth > canvasHeight ? "landscape" : "portrait",
+				unit: "px",
+				format: [canvasWidth, canvasHeight],
+			});
+			pdf.addImage(
+				canvas.toDataURL("image/png"),
+				"PNG",
+				0,
+				0,
+				canvasWidth,
+				canvasHeight
+			);
+			pdf.save("whiteboard.pdf");
+			return;
+		}
+
 		link.click();
-		console.log(`Canvas exported as: ${format}`);
 	};
 
 	return (
@@ -257,8 +300,9 @@ const Whiteboard = () => {
 				onBackdropColorChange={handleBackdropColorChange}
 			/>
 			<UserToolbar
-				onBrushSizeChange={handleBrushSizeChange}
-				onColorChange={handleColorChange}
+				onBrushSizeChange={setBrushSize}
+				onBrushTypeChange={setBrushType}
+				onColorChange={setColor}
 			/>
 			<UserList users={users} />
 			<div className="canvas-container">
@@ -271,7 +315,7 @@ const Whiteboard = () => {
 					style={{ border: "2px solid black" }}
 				/>
 			</div>
-			<button className="logout-button" onClick={handleLogout}>
+			<button className="logout-button" onClick={() => logout(navigate)}>
 				Logout
 			</button>
 		</div>
