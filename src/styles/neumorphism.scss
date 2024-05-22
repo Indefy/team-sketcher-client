@@ -1,0 +1,15 @@
+.neumorphic {
+	background: #e0e0e0;
+	border-radius: 20px;
+	box-shadow: 12px 12px 24px rgba(163, 177, 198, 0.6),
+		-12px -12px 24px rgba(255, 255, 255, 0.8);
+}
+
+.neumorphic-button {
+	background: #cccccc;
+	color: #333;
+	&:hover,
+	&:focus {
+		background: #bbbbbb;
+	}
+}

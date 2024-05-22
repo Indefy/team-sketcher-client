@@ -1,15 +1,25 @@
 .user-toolbar-container {
 	display: flex;
-	flex-direction: column;
-	background: rgba(255, 255, 255, 0.8);
-	padding: 10px;
-	backdrop-filter: blur(10px);
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	position: fixed;
-	top: 10px;
-	right: 10px;
-	z-index: 1001;
+	justify-content: space-between;
+	background: #e0e0e0;
+	border-radius: 12px;
+	box-shadow: 9px 9px 16px rgba(0, 0, 0, 0.2),
+		-9px -9px 16px rgba(255, 255, 255, 0.5);
+	padding: 10px 20px;
+}
+
+.neumorphic-button {
+	border: none;
+	border-radius: 12px;
+	background: var(--button-background-color);
+	box-shadow: var(--button-shadow);
+	color: var(--button-text-color);
+	padding: 10px 20px;
+	transition: 0.3s;
+	&:hover {
+		box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+			inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+	}
 }
 
 .color-picker {

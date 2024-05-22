@@ -21,7 +21,6 @@ const Login = () => {
 			<form onSubmit={handleSubmit}>
 				<input
 					className="login-input"
-					name="login-input1"
 					type="text"
 					placeholder="Username"
 					value={username}
@@ -29,7 +28,6 @@ const Login = () => {
 				/>
 				<input
 					className="login-input"
-					name="login-input2"
 					type="password"
 					placeholder="Password"
 					value={password}

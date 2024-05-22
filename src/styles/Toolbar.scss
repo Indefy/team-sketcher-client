@@ -1,31 +1,24 @@
 .toolbar-container {
 	display: flex;
 	justify-content: space-between;
-	background: var(--toolbar-background);
-	padding: 10px;
-	backdrop-filter: blur(10px);
-	border-radius: 10px;
-	box-shadow: var(--toolbar-shadow);
-	position: fixed;
-	top: 10px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 1001;
+	background: #e0e0e0;
+	border-radius: 12px;
+	box-shadow: 9px 9px 16px rgba(0, 0, 0, 0.2),
+		-9px -9px 16px rgba(255, 255, 255, 0.5);
+	padding: 10px 20px;
 }
 
-.toolbar-button {
-	padding: 10px;
-	margin: 0 5px;
-	background: var(--button-background-color);
-	color: var(--button-text-color);
+.neumorphic-button {
 	border: none;
-	border-radius: 5px;
-	cursor: pointer;
-	transition: box-shadow 0.3s ease, outline 0.3s ease;
-
+	border-radius: 12px;
+	background: var(--button-background-color);
+	box-shadow: var(--button-shadow);
+	color: var(--button-text-color);
+	padding: 10px 20px;
+	transition: 0.3s;
 	&:hover {
-		box-shadow: 0 0 10px var(--button-background-color);
-		outline: 1px solid rgba(255, 255, 255, 0.5);
+		box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+			inset -4px -4px 8px rgba(255, 255, 255, 0.7);
 	}
 }
 

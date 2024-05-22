@@ -15,6 +15,14 @@ import UserList from "./UserList";
 import "../styles/Whiteboard.scss";
 import { useWhiteboardContext } from "../context/WhiteboardContext";
 
+//==TEST
+import ThemeSelector from "./ThemeSelector";
+import "../styles/Whiteboard.scss";
+import "../styles/neumorphism.scss";
+import "../styles/themes.scss";
+import "../styles/AnimatedBackground.scss";
+//==TEST
+
 const socket = io(process.env.REACT_APP_SERVER_URL);
 
 const Whiteboard = () => {
@@ -29,6 +37,10 @@ const Whiteboard = () => {
 	const [canvasHistory, setCanvasHistory] = useState([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isDrawing, setIsDrawing] = useState(false);
+
+	//===TEST
+	const [theme, setTheme] = useState("light");
+	//===TEST
 
 	const handleUpdateUsers = (connectedUsers) => {
 		const uniqueUsers = connectedUsers.filter(
@@ -284,6 +296,13 @@ const Whiteboard = () => {
 		link.click();
 	};
 
+	const handleLogout = () => {
+		socket.emit("userLeft", user);
+		logout(navigate);
+		setUsers([]); // Clear user list on logout to prevent stale data
+		console.log("User logged out and users state reset.");
+	};
+
 	return (
 		<div
 			className="whiteboard-container"
@@ -315,7 +334,8 @@ const Whiteboard = () => {
 					style={{ border: "2px solid black" }}
 				/>
 			</div>
-			<button className="logout-button" onClick={() => logout(navigate)}>
+			<ThemeSelector onThemeChange={setTheme} theme={theme} />
+			<button className="logout-button" onClick={handleLogout}>
 				Logout
 			</button>
 		</div>
