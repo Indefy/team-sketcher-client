@@ -2,8 +2,8 @@ import React, {
 	useRef,
 	useEffect,
 	useContext,
-	useCallback,
 	useState,
+	useCallback,
 } from "react";
 import io from "socket.io-client";
 import { AuthContext } from "../context/AuthContext";
@@ -15,6 +15,7 @@ import { useWhiteboardContext } from "../context/WhiteboardContext";
 
 //==TEST
 import CustomToolbar from "./CustomToolbar";
+import ThemeSelector from "./ThemeSelector";
 import "../styles/Whiteboard.scss";
 import "../styles/neumorphism.scss";
 import "../styles/themes.scss";
@@ -27,14 +28,17 @@ const Whiteboard = () => {
 		useWhiteboardContext();
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
-	const { user, logout } = useContext(AuthContext);
-	const navigate = useNavigate();
+	// const [backdropColor, setBackdropColor] = useState("");
+	// const [canvasBackdropColor, setCanvasBackdropColor] = useState("#ffffff");
 	const [backdropColor] = useState("");
 	const [canvasBackdropColor] = useState("#ffffff");
+	const { user, logout } = useContext(AuthContext);
+	const navigate = useNavigate();
 	const [users, setUsers] = useState([]);
 	const [canvasHistory, setCanvasHistory] = useState([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isDrawing, setIsDrawing] = useState(false);
+	const [theme, setTheme] = useState("light");
 
 	const handleUpdateUsers = (connectedUsers) => {
 		const uniqueUsers = connectedUsers.filter(
@@ -178,6 +182,28 @@ const Whiteboard = () => {
 		}
 	};
 
+	const handleTouchStart = (e) => {
+		const touch = e.touches[0];
+		const offsetX =
+			touch.clientX - canvasRef.current.getBoundingClientRect().left;
+		const offsetY =
+			touch.clientY - canvasRef.current.getBoundingClientRect().top;
+		handleMouseDown({ nativeEvent: { offsetX, offsetY } });
+	};
+
+	const handleTouchMove = (e) => {
+		const touch = e.touches[0];
+		const offsetX =
+			touch.clientX - canvasRef.current.getBoundingClientRect().left;
+		const offsetY =
+			touch.clientY - canvasRef.current.getBoundingClientRect().top;
+		handleMouseMove({ nativeEvent: { offsetX, offsetY } });
+	};
+
+	const handleTouchEnd = () => {
+		handleMouseUp();
+	};
+
 	const saveCanvasState = () => {
 		const dataUrl = canvasRef.current.toDataURL();
 		const newHistory = canvasHistory.slice(0, historyIndex + 1);
@@ -200,6 +226,7 @@ const Whiteboard = () => {
 		const tempContext = tempCanvas.getContext("2d");
 		tempCanvas.width = canvas.width;
 		tempCanvas.height = canvas.height;
+		tempContext.fillStyle = backdropColor;
 		tempContext.fillStyle = canvasBackdropColor;
 		tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 		tempContext.drawImage(canvas, 0, 0);
@@ -213,6 +240,11 @@ const Whiteboard = () => {
 	const handleSharePage = () => {
 		alert("Share functionality to be implemented");
 	};
+
+	// const handleBackdropColorChange = (color) => {
+	// 	setBackdropColor(color);
+	// 	document.documentElement.style.setProperty("--backdrop-color", color);
+	// };
 
 	const handleUndo = () => {
 		if (historyIndex > 0) {
@@ -278,6 +310,7 @@ const Whiteboard = () => {
 		socket.emit("userLeft", user);
 		logout(navigate);
 		setUsers([]);
+		console.log("User logged out and users state reset.");
 	};
 
 	return (
@@ -286,7 +319,6 @@ const Whiteboard = () => {
 			style={{ "--backdrop-color": backdropColor }}
 		>
 			<CustomToolbar
-				className="custom-toolbar"
 				onNewPage={handleNewPage}
 				onSavePage={handleSavePage}
 				onSharePage={handleSharePage}
@@ -308,8 +340,13 @@ const Whiteboard = () => {
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
 					onMouseOut={handleMouseUp}
+					onTouchStart={handleTouchStart}
+					onTouchMove={handleTouchMove}
+					onTouchEnd={handleTouchEnd}
+					style={{ border: "2px solid var(--canvas-border-color)" }}
 				/>
 			</div>
+			<ThemeSelector onThemeChange={setTheme} theme={theme} />
 			<button className="logout-button" onClick={handleLogout}>
 				Logout
 			</button>
