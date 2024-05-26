@@ -6,6 +6,7 @@ import { WhiteboardProvider } from "./context/WhiteboardContext";
 import Whiteboard from "./components/Whiteboard";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import ThemeSelector from "./components/ThemeSelector";
 import "./styles/global.scss";
 
 const App = () => {
@@ -19,6 +20,7 @@ const App = () => {
 							<Route path="/register" element={<Register />} />
 							<Route path="/" element={<Whiteboard />} />
 						</Routes>
+						<ThemeSelector />
 					</WhiteboardProvider>
 				</AuthProvider>
 			</ThemeProvider>

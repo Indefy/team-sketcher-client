@@ -15,7 +15,7 @@ const ThemeProvider = ({ children }) => {
 
 	useEffect(() => {
 		const root = document.documentElement;
-		root.className = theme;
+		root.className = theme === "light" ? "light-theme" : "dark-theme";
 	}, [theme]);
 
 	const muiTheme = createTheme({

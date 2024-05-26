@@ -1,8 +1,11 @@
 .theme-selector {
+	position: fixed;
+	top: 0;
+	left: 0;
 	display: flex;
+	margin: 1.5vh 3vw;
 	align-items: center;
-	margin: 0 5px;
-	color: var(--text-color);
+	z-index: 9999;
 
 	label {
 		margin-right: 10px;
@@ -15,4 +18,8 @@
 		background: var(--button-background-color);
 		color: var(--button-text-color);
 	}
+}
+
+.theme-selector label {
+	color: var(--theme-selector-text);
 }

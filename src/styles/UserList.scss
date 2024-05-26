@@ -4,11 +4,12 @@
 	position: fixed;
 	bottom: 10px;
 	left: 10px;
-	background: rgba(255, 255, 255, 0.8);
+	color: var(--user-list-text-color);
+	background: var(--user-list-background-color);
 	padding: 10px;
 	backdrop-filter: blur(10px);
 	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	box-shadow: var(--button-shadow);
 	z-index: 1001;
 	max-height: 90vh;
 	overflow-y: auto;

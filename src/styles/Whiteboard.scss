@@ -4,22 +4,23 @@
 	align-items: center;
 	justify-content: center;
 	height: 100vh;
-	background: var(--backdrop-color, #ffffff);
+	background: var(--backdrop-color);
 	position: relative;
 }
 
 .canvas-container {
 	position: relative;
-	background: rgba(255, 255, 255, 0.2);
-	backdrop-filter: blur(10px);
-	border-radius: 10px;
+	margin: 2vh;
+	border-radius: 2.5rem;
+	background-color: rgb(255 245 235);
 	padding: 20px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 	z-index: 1000;
+	border: 1rem solid var(--canvas-border-color);
 }
 
 .logout-button {
-	margin-top: 20px;
+	margin-top: 3rem;
 	padding: 10px 20px;
 	background: #f44336;
 	color: white;

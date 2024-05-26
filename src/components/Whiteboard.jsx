@@ -2,25 +2,22 @@ import React, {
 	useRef,
 	useEffect,
 	useContext,
-	useState,
 	useCallback,
+	useState,
 } from "react";
 import io from "socket.io-client";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
-import Toolbar from "./Toolbar";
 import UserToolbar from "./UserToolbar";
 import UserList from "./UserList";
-import "../styles/Whiteboard.scss";
 import { useWhiteboardContext } from "../context/WhiteboardContext";
 
 //==TEST
-import ThemeSelector from "./ThemeSelector";
+import CustomToolbar from "./CustomToolbar";
 import "../styles/Whiteboard.scss";
 import "../styles/neumorphism.scss";
 import "../styles/themes.scss";
-import "../styles/AnimatedBackground.scss";
 //==TEST
 
 const socket = io(process.env.REACT_APP_SERVER_URL);
@@ -30,17 +27,14 @@ const Whiteboard = () => {
 		useWhiteboardContext();
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
-	const [backdropColor, setBackdropColor] = useState("#ffffff");
 	const { user, logout } = useContext(AuthContext);
 	const navigate = useNavigate();
+	const [backdropColor] = useState("");
+	const [canvasBackdropColor] = useState("#ffffff");
 	const [users, setUsers] = useState([]);
 	const [canvasHistory, setCanvasHistory] = useState([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isDrawing, setIsDrawing] = useState(false);
-
-	//===TEST
-	const [theme, setTheme] = useState("light");
-	//===TEST
 
 	const handleUpdateUsers = (connectedUsers) => {
 		const uniqueUsers = connectedUsers.filter(
@@ -52,12 +46,11 @@ const Whiteboard = () => {
 
 	const applyBrushSettings = useCallback(
 		(context, brushType, brushSize, color) => {
-			// Resetting context properties
 			context.setLineDash([]);
 			context.globalAlpha = 1.0;
 			context.shadowBlur = 0;
 			context.shadowColor = "rgba(0, 0, 0, 0)";
-			context.lineJoin = "round"; // Default line join style
+			context.lineJoin = "round";
 
 			context.lineWidth = brushSize;
 			context.strokeStyle = color;
@@ -207,7 +200,7 @@ const Whiteboard = () => {
 		const tempContext = tempCanvas.getContext("2d");
 		tempCanvas.width = canvas.width;
 		tempCanvas.height = canvas.height;
-		tempContext.fillStyle = backdropColor;
+		tempContext.fillStyle = canvasBackdropColor;
 		tempContext.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 		tempContext.drawImage(canvas, 0, 0);
 
@@ -219,11 +212,6 @@ const Whiteboard = () => {
 
 	const handleSharePage = () => {
 		alert("Share functionality to be implemented");
-	};
-
-	const handleBackdropColorChange = (color) => {
-		setBackdropColor(color);
-		document.documentElement.style.setProperty("--backdrop-color", color);
 	};
 
 	const handleUndo = () => {
@@ -263,44 +251,33 @@ const Whiteboard = () => {
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	};
 
-	const handleExport = (format) => {
+	const handleExport = () => {
 		const canvas = canvasRef.current;
-		const link = document.createElement("a");
+		const canvasWidth = canvas.width / 2;
+		const canvasHeight = canvas.height / 2;
 
-		if (format === "png") {
-			link.href = canvas.toDataURL("image/png");
-			link.download = "whiteboard.png";
-		} else if (format === "jpeg") {
-			link.href = canvas.toDataURL("image/jpeg");
-			link.download = "whiteboard.jpeg";
-		} else if (format === "pdf") {
-			const canvasWidth = canvas.width / 2; // Divide by 2 to account for the scaling applied to the canvas
-			const canvasHeight = canvas.height / 2; // Divide by 2 to account for the scaling applied to the canvas
-			const pdf = new jsPDF({
-				orientation: canvasWidth > canvasHeight ? "landscape" : "portrait",
-				unit: "px",
-				format: [canvasWidth, canvasHeight],
-			});
-			pdf.addImage(
-				canvas.toDataURL("image/png"),
-				"PNG",
-				0,
-				0,
-				canvasWidth,
-				canvasHeight
-			);
-			pdf.save("whiteboard.pdf");
-			return;
-		}
+		const pdf = new jsPDF({
+			orientation: canvasWidth > canvasHeight ? "landscape" : "portrait",
+			unit: "px",
+			format: [canvasWidth, canvasHeight],
+		});
 
-		link.click();
+		pdf.addImage(
+			canvas.toDataURL("image/png"),
+			"PNG",
+			0,
+			0,
+			canvasWidth,
+			canvasHeight
+		);
+
+		pdf.save("whiteboard.pdf");
 	};
 
 	const handleLogout = () => {
 		socket.emit("userLeft", user);
 		logout(navigate);
-		setUsers([]); // Clear user list on logout to prevent stale data
-		console.log("User logged out and users state reset.");
+		setUsers([]);
 	};
 
 	return (
@@ -308,15 +285,14 @@ const Whiteboard = () => {
 			className="whiteboard-container"
 			style={{ "--backdrop-color": backdropColor }}
 		>
-			<Toolbar
+			<CustomToolbar
+				className="custom-toolbar"
 				onNewPage={handleNewPage}
 				onSavePage={handleSavePage}
 				onSharePage={handleSharePage}
 				onUndo={handleUndo}
 				onRedo={handleRedo}
-				onClearCanvas={handleNewPage}
 				onExport={handleExport}
-				onBackdropColorChange={handleBackdropColorChange}
 			/>
 			<UserToolbar
 				onBrushSizeChange={setBrushSize}
@@ -326,15 +302,14 @@ const Whiteboard = () => {
 			<UserList users={users} />
 			<div className="canvas-container">
 				<canvas
+					id="board"
 					ref={canvasRef}
 					onMouseDown={handleMouseDown}
 					onMouseMove={handleMouseMove}
 					onMouseUp={handleMouseUp}
 					onMouseOut={handleMouseUp}
-					style={{ border: "2px solid black" }}
 				/>
 			</div>
-			<ThemeSelector onThemeChange={setTheme} theme={theme} />
 			<button className="logout-button" onClick={handleLogout}>
 				Logout
 			</button>
