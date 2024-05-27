@@ -10,3 +10,6 @@ Start with running "npm i" to install the dependencies required to run the Appli
 Make sure the Backend of the App is running for the frontend to  work.
 
 After entering the client url you need to register a user in the register page, then you will be able to log in and access the app.
+
+Sample : https://team-sketcher-client.onrender.com
+
