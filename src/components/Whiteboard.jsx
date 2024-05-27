@@ -29,8 +29,8 @@ const Whiteboard = () => {
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	// const [backdropColor, setBackdropColor] = useState("");
-	// const [canvasBackdropColor, setCanvasBackdropColor] = useState("#ffffff");
 	const [backdropColor] = useState("");
+	// const [canvasBackdropColor, setCanvasBackdropColor] = useState("#ffffff");
 	const [canvasBackdropColor] = useState("#ffffff");
 	const { user, logout } = useContext(AuthContext);
 	const navigate = useNavigate();
@@ -38,7 +38,10 @@ const Whiteboard = () => {
 	const [canvasHistory, setCanvasHistory] = useState([]);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const [isDrawing, setIsDrawing] = useState(false);
+
+	//===TEST
 	const [theme, setTheme] = useState("light");
+	//===TEST
 
 	const handleUpdateUsers = (connectedUsers) => {
 		const uniqueUsers = connectedUsers.filter(
@@ -182,6 +185,19 @@ const Whiteboard = () => {
 		}
 	};
 
+	const supportsPassive = () => {
+		let supports = false;
+		try {
+			const options = Object.defineProperty({}, "passive", {
+				get: () => {
+					supports = true;
+				},
+			});
+			window.addEventListener("test", null, options);
+		} catch (err) {}
+		return supports;
+	};
+
 	const handleTouchStart = (e) => {
 		const touch = e.touches[0];
 		const offsetX =
@@ -192,6 +208,9 @@ const Whiteboard = () => {
 	};
 
 	const handleTouchMove = (e) => {
+		if (!supportsPassive()) {
+			e.preventDefault();
+		}
 		const touch = e.touches[0];
 		const offsetX =
 			touch.clientX - canvasRef.current.getBoundingClientRect().left;
@@ -200,7 +219,7 @@ const Whiteboard = () => {
 		handleMouseMove({ nativeEvent: { offsetX, offsetY } });
 	};
 
-	const handleTouchEnd = () => {
+	const handleTouchEnd = (e) => {
 		handleMouseUp();
 	};
 
@@ -343,7 +362,10 @@ const Whiteboard = () => {
 					onTouchStart={handleTouchStart}
 					onTouchMove={handleTouchMove}
 					onTouchEnd={handleTouchEnd}
-					style={{ border: "2px solid var(--canvas-border-color)" }}
+					style={{
+						border: "2px solid var(--canvas-border-color)",
+						touchAction: "none",
+					}}
 				/>
 			</div>
 			<ThemeSelector onThemeChange={setTheme} theme={theme} />

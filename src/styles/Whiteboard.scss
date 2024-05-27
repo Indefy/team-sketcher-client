@@ -6,21 +6,31 @@
 	height: 100vh;
 	background: var(--backdrop-color);
 	position: relative;
+	padding: 20px;
+	box-sizing: border-box;
 }
 
 .canvas-container {
 	position: relative;
-	margin: 2vh;
-	border-radius: 2.5rem;
+	border-radius: 10px;
 	background-color: rgb(255 245 235);
 	padding: 20px;
 	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 	z-index: 1000;
-	border: 1rem solid var(--canvas-border-color);
+	border: 1rem solid;
+	border-color: var(--canvas-border-color);
+	width: 100%;
+	max-width: 1280px;
+	height: auto;
+}
+
+canvas {
+	width: 100%;
+	height: auto;
 }
 
 .logout-button {
-	margin-top: 3rem;
+	margin-top: 20px;
 	padding: 10px 20px;
 	background: #f44336;
 	color: white;
@@ -31,5 +41,12 @@
 
 	&:hover {
 		background: #d32f2f;
+	}
+}
+
+@media (max-width: 768px) {
+	.canvas-container {
+		padding: 10px;
+		border-width: 0.5rem;
 	}
 }
