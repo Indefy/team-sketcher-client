@@ -1,9 +1,10 @@
 .user-list {
 	display: flex;
 	flex-direction: column;
-	position: fixed;
+	position: absolute;
 	bottom: 10px;
 	left: 10px;
+	right: 10px;
 	color: var(--user-list-text-color);
 	background: var(--user-list-background-color);
 	padding: 10px;
@@ -12,7 +13,9 @@
 	box-shadow: var(--button-shadow);
 	z-index: 1001;
 	max-height: 90vh;
+	max-width: 30vw;
 	overflow-y: auto;
+	box-sizing: border-box;
 }
 
 .user-item {
