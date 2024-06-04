@@ -1,31 +1,109 @@
 .user-toolbar-container {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
-	background: #e0e0e0;
+	align-items: center;
+	background: var(--toolbar-gradient);
 	border-radius: 12px;
 	box-shadow: 9px 9px 16px rgba(0, 0, 0, 0.2),
 		-9px -9px 16px rgba(255, 255, 255, 0.5);
 	padding: 10px 20px;
+	margin-bottom: 10px;
+	transition: background 0.3s, box-shadow 0.3s;
+
+	&:hover {
+		background: var(--toolbar-gradient-hover);
+		box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1),
+			-4px -4px 8px rgba(255, 255, 255, 0.7);
+	}
+
+	@media only screen and (max-width: 600px) {
+		flex-direction: row;
+		align-items: flex-start;
+	}
 }
 
-.neumorphic-button {
-	border: none;
-	border-radius: 12px;
-	background: var(--button-background-color);
-	box-shadow: var(--button-shadow);
-	color: var(--button-text-color);
-	padding: 10px 20px;
-	transition: 0.3s;
-	&:hover {
-		box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1),
-			inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+.toolbar-item {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	margin-right: 15px;
+	margin-bottom: 10px;
+
+	label {
+		margin-bottom: 5px;
+		font-size: 0.9em;
+		color: var(--text-color);
+	}
+
+	select,
+	input[type="color"] {
+		padding: 8px;
+		border-radius: 8px;
+		border: 1px solid #ccc;
+		background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+		box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1),
+			inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+		transition: box-shadow 0.3s, background 0.3s;
+
+		&:hover {
+			background: linear-gradient(145deg, #e0e0e0, #d0d0d0);
+			box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+				inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+		}
+
+		&:focus {
+			outline: none;
+			box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+				inset -2px -2px 5px rgba(255, 255, 255, 0.6);
+		}
 	}
 }
 
 .color-picker {
-	margin: 10px 0;
+	width: 100%;
+	padding: 8px;
+	border-radius: 8px;
+	border: 1px solid #ccc;
+	background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+	box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1),
+		inset -2px -2px 5px rgba(255, 255, 255, 0.5);
+	transition: box-shadow 0.3s, background 0.3s;
+
+	&:hover {
+		background: linear-gradient(145deg, #e0e0e0, #d0d0d0);
+		box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.1),
+			inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+	}
+
+	&:focus {
+		outline: none;
+		box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2),
+			inset -2px -2px 5px rgba(255, 255, 255, 0.6);
+	}
 }
 
-.brush-size {
-	margin: 10px 0;
+@media only screen and (max-width: 600px) {
+	.user-toolbar-container {
+		width: 100%;
+		margin-bottom: 15px;
+	}
+
+	select,
+	input[type="color"] {
+		width: 100%;
+	}
+}
+
+@media only screen and (min-width: 1700px) {
+	.user-toolbar-container {
+		position: fixed;
+		left: 0;
+		top: 0;
+		margin: 5vw;
+		display: flex;
+		flex-direction: column;
+		align-content: center;
+		align-items: center;
+	}
 }

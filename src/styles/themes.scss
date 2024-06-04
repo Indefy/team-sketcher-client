@@ -5,6 +5,12 @@
 	--button-text-color: #333333;
 	--button-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.5),
 		inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+	--toolbar-gradient-light: linear-gradient(145deg, #adfff1, #92eda7);
+	--toolbar-gradient-dark: linear-gradient(
+		145deg,
+		rgb(87 2 47),
+		rgb(48 11 109)
+	);
 }
 
 .light-theme {
@@ -16,6 +22,8 @@
 		inset -2px -2px 5px rgba(0, 0, 0, 0.1);
 	--backdrop-color: #f0f0f3;
 	--theme-selector-text: #1976d2;
+	--toolbar-gradient: var(--toolbar-gradient-light);
+	--toolbar-gradient-hover: linear-gradient(145deg, #92eda7, #adfff1);
 }
 
 .dark-theme {
@@ -27,4 +35,10 @@
 		inset -2px -2px 5px rgba(255, 255, 255, 0.1);
 	--backdrop-color: #333333;
 	--theme-selector-text: #90caf9;
+	--toolbar-gradient: var(--toolbar-gradient-dark);
+	--toolbar-gradient-hover: linear-gradient(
+		145deg,
+		rgb(48 11 109),
+		rgb(87 2 47)
+	);
 }

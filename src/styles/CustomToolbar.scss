@@ -1,8 +1,13 @@
 .custom-toolbar {
 	display: flex;
 	justify-content: center;
-	background: var(--background-color);
-	background-color: rgba(141, 141, 141, 0.736);
+	background: var(--toolbar-gradient);
 	box-shadow: var(--button-shadow);
 	padding: 10px 20px;
+
+	label {
+		margin-bottom: 5px;
+		font-size: 0.9em;
+		color: var(--text-color);
+	}
 }

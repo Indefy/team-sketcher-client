@@ -6,6 +6,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import PdfIcon from "@mui/icons-material/PictureAsPdfRounded";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/CustomToolbar.scss";
 
 const CustomToolbar = ({
@@ -16,9 +17,14 @@ const CustomToolbar = ({
 	onRedo,
 	onExport,
 }) => {
+	const { muiTheme } = useTheme();
+
 	return (
 		<AppBar position="absolute" color="default" top="0" elevation={1}>
-			<Toolbar className="custom-toolbar">
+			<Toolbar
+				className="custom-toolbar"
+				style={{ background: muiTheme.gradient }}
+			>
 				<Box
 					sx={{
 						display: "flex",

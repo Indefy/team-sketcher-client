@@ -15,7 +15,7 @@ const ThemeProvider = ({ children }) => {
 
 	useEffect(() => {
 		const root = document.documentElement;
-		root.className = theme;
+		root.className = theme === "light" ? "light-theme" : "dark-theme";
 	}, [theme]);
 
 	const muiTheme = createTheme({
@@ -29,6 +29,7 @@ const ThemeProvider = ({ children }) => {
 						text: {
 							primary: "#333333",
 						},
+						gradient: "linear-gradient(145deg, #adfff1, #92eda7)",
 				  }
 				: {
 						background: {
@@ -37,6 +38,7 @@ const ThemeProvider = ({ children }) => {
 						text: {
 							primary: "#f0f0f3",
 						},
+						gradient: "linear-gradient(145deg, #333333, #666666)",
 				  }),
 		},
 	});
@@ -46,7 +48,7 @@ const ThemeProvider = ({ children }) => {
 	};
 
 	return (
-		<ThemeContext.Provider value={{ theme, changeTheme }}>
+		<ThemeContext.Provider value={{ theme, changeTheme, muiTheme }}>
 			<MUIThemeProvider theme={muiTheme}>
 				<CssBaseline />
 				{children}
