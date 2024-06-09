@@ -13,17 +13,35 @@ import UserToolbar from "./UserToolbar";
 import UserList from "./UserList";
 import { useWhiteboardContext } from "../context/WhiteboardContext";
 
-//==TEST
 import CustomToolbar from "./CustomToolbar";
 import ThemeSelector from "./ThemeSelector";
 import "../styles/Whiteboard.scss";
 import "../styles/neumorphism.scss";
 import "../styles/themes.scss";
-//==TEST
 
+// Initialize socket connection to the server
 const socket = io(process.env.REACT_APP_SERVER_URL);
 
+// Utility function to generate lighter and darker shades of a given color
+const shadeColor = (color, percent) => {
+	const f = parseInt(color.slice(1), 16);
+	const t = percent < 0 ? 0 : 255;
+	const p = percent < 0 ? percent * -1 : percent;
+	const R = f >> 16;
+	const G = (f >> 8) & 0x00ff;
+	const B = f & 0x0000ff;
+	return `#${(
+		0x1000000 +
+		(Math.round((t - R) * p) + R) * 0x10000 +
+		(Math.round((t - G) * p) + G) * 0x100 +
+		(Math.round((t - B) * p) + B)
+	)
+		.toString(16)
+		.slice(1)}`;
+};
+
 const Whiteboard = () => {
+	// Destructure context values from useWhiteboardContext
 	const {
 		brushSize,
 		brushType,
@@ -40,6 +58,7 @@ const Whiteboard = () => {
 		users,
 		setUsers,
 	} = useWhiteboardContext();
+
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	const [backdropColor] = useState("");
@@ -48,6 +67,7 @@ const Whiteboard = () => {
 	const navigate = useNavigate();
 	const [theme, setTheme] = useState("light");
 
+	// Update users list when new users join or leave
 	const handleUpdateUsers = useCallback(
 		(connectedUsers) => {
 			const uniqueUsers = connectedUsers.filter(
@@ -59,8 +79,9 @@ const Whiteboard = () => {
 		[setUsers]
 	);
 
+	// Apply brush settings based on the selected brush type
 	const applyBrushSettings = useCallback(
-		(context, brushType, brushSize, color) => {
+		(context, brushType, brushSize, color, x0, y0, x1, y1) => {
 			context.setLineDash([]);
 			context.globalAlpha = 1.0;
 			context.shadowBlur = 0;
@@ -79,12 +100,24 @@ const Whiteboard = () => {
 					break;
 				case "dotted":
 					context.lineCap = "round";
-					context.setLineDash([brushSize, brushSize]);
+					context.setLineDash([brushSize, brushSize * 8]);
+					context.lineDashOffset = brushSize / 2;
+					context.lineWidth = brushSize;
 					break;
 				case "pattern":
+					const patternCanvas = document.createElement("canvas");
+					const patternContext = patternCanvas.getContext("2d");
+					patternCanvas.width = brushSize * 2;
+					patternCanvas.height = brushSize * 2;
+					patternContext.fillStyle = color;
+					patternContext.fillRect(0, 0, brushSize, brushSize);
+					patternContext.fillRect(brushSize, brushSize, brushSize, brushSize);
+					const pattern = context.createPattern(patternCanvas, "repeat");
+					context.strokeStyle = pattern;
 					break;
 				case "fuzzy":
 					context.globalAlpha = 0.2;
+					context.lineCap = "round";
 					context.lineWidth = brushSize * 3;
 					break;
 				case "calligraphy":
@@ -92,17 +125,25 @@ const Whiteboard = () => {
 					context.lineJoin = "miter";
 					break;
 				case "gradient":
-					const gradient = context.createLinearGradient(0, 0, 170, 0);
-					gradient.addColorStop(0, color);
-					gradient.addColorStop(1, "white");
-					context.strokeStyle = gradient;
+					context.globalAlpha = 1;
+					context.lineCap = "round";
+					if (isFinite(x0) && isFinite(y0) && isFinite(x1) && isFinite(y1)) {
+						const gradient = context.createLinearGradient(x0, y0, x1, y1);
+						const lighterColor = shadeColor(color, 0.5); // 50% lighter
+						const darkerColor = shadeColor(color, -0.5); // 50% darker
+						gradient.addColorStop(0, lighterColor);
+						gradient.addColorStop(0.5, color);
+						gradient.addColorStop(1, darkerColor);
+						context.strokeStyle = gradient;
+					}
 					break;
 				case "shadow":
 					context.lineCap = "round";
-					context.shadowBlur = 10;
-					context.shadowColor = "rgba(0, 0, 0, 0.5)";
+					context.shadowBlur = 14;
+					context.shadowColor = "rgba(0, 0, 0, 0.7)";
 					break;
 				default:
+					context.globalAlpha = 1;
 					context.lineCap = "round";
 					break;
 			}
@@ -110,12 +151,12 @@ const Whiteboard = () => {
 		[]
 	);
 
+	// Handle drawing events from other users
 	const onDrawingEvent = useCallback(
 		(data) => {
 			const { x0, y0, x1, y1, color, brushSize, brushType } = data;
 			const context = contextRef.current;
-			applyBrushSettings(context, brushType, brushSize, color);
-
+			applyBrushSettings(context, brushType, brushSize, color, x0, y0, x1, y1);
 			context.beginPath();
 			context.moveTo(x0, y0);
 			context.lineTo(x1, y1);
@@ -124,6 +165,62 @@ const Whiteboard = () => {
 		[applyBrushSettings]
 	);
 
+	// Interpolate points for smoother drawing
+	const interpolatePoints = useCallback(
+		(x0, y0, x1, y1) => {
+			const distance = Math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2);
+			const step = brushSize / 2;
+			for (let i = step; i < distance; i += step) {
+				const t = i / distance;
+				const intermediateX = x0 + (x1 - x0) * t;
+				const intermediateY = y0 + (y1 - y0) * t;
+				contextRef.current.lineTo(intermediateX, intermediateY);
+				contextRef.current.stroke();
+			}
+		},
+		[brushSize]
+	);
+
+	// Main drawing function
+	const drawLine = useCallback(
+		({ offsetX, offsetY }) => {
+			const x0 = canvasRef.current.lastX;
+			const y0 = canvasRef.current.lastY;
+			const x1 = offsetX;
+			const y1 = offsetY;
+			const data = { x0, y0, x1, y1, color, brushSize, brushType };
+			applyBrushSettings(
+				contextRef.current,
+				brushType,
+				brushSize,
+				color,
+				x0,
+				y0,
+				x1,
+				y1
+			);
+			contextRef.current.beginPath();
+			contextRef.current.moveTo(x0, y0);
+			contextRef.current.lineTo(x1, y1);
+			contextRef.current.stroke();
+			socket.emit("drawing", data);
+			canvasRef.current.lastX = offsetX;
+			canvasRef.current.lastY = offsetY;
+			interpolatePoints(x0, y0, x1, y1);
+		},
+		[applyBrushSettings, brushSize, brushType, color, interpolatePoints]
+	);
+
+	// Save the current state of the canvas to the history
+	const saveCanvasState = useCallback(() => {
+		const dataUrl = canvasRef.current.toDataURL();
+		const newHistory = canvasHistory.slice(0, historyIndex + 1);
+		newHistory.push(dataUrl);
+		setCanvasHistory(newHistory);
+		setHistoryIndex(newHistory.length - 1);
+	}, [canvasHistory, historyIndex, setCanvasHistory, setHistoryIndex]);
+
+	// Initialize the canvas and socket events
 	useEffect(() => {
 		if (!user) {
 			navigate("/login");
@@ -152,6 +249,7 @@ const Whiteboard = () => {
 		};
 	}, [user, navigate, onDrawingEvent, handleUpdateUsers]);
 
+	// Apply brush settings whenever they change
 	useEffect(() => {
 		const context = contextRef.current;
 		if (context) {
@@ -159,39 +257,39 @@ const Whiteboard = () => {
 		}
 	}, [brushSize, brushType, color, applyBrushSettings]);
 
-	const handleMouseDown = ({ nativeEvent }) => {
-		const { offsetX, offsetY } = nativeEvent;
-		canvasRef.current.isDrawing = true;
-		setIsDrawing(true);
-		canvasRef.current.lastX = offsetX;
-		canvasRef.current.lastY = offsetY;
-	};
+	// Handle mouse down event
+	const handleMouseDown = useCallback(
+		({ nativeEvent }) => {
+			const { offsetX, offsetY } = nativeEvent;
+			canvasRef.current.isDrawing = true;
+			setIsDrawing(true);
+			canvasRef.current.lastX = offsetX;
+			canvasRef.current.lastY = offsetY;
+		},
+		[setIsDrawing]
+	);
 
-	const handleMouseMove = ({ nativeEvent }) => {
-		if (!canvasRef.current.isDrawing) return;
-		const { offsetX, offsetY } = nativeEvent;
-		const x0 = canvasRef.current.lastX;
-		const y0 = canvasRef.current.lastY;
-		const x1 = offsetX;
-		const y1 = offsetY;
-		const data = { x0, y0, x1, y1, color, brushSize, brushType };
-		contextRef.current.beginPath();
-		contextRef.current.moveTo(x0, y0);
-		contextRef.current.lineTo(x1, y1);
-		contextRef.current.stroke();
-		socket.emit("drawing", data);
-		canvasRef.current.lastX = offsetX;
-		canvasRef.current.lastY = offsetY;
-	};
+	// Handle mouse move event
+	const handleMouseMove = useCallback(
+		({ nativeEvent }) => {
+			if (!canvasRef.current.isDrawing) return;
+			requestAnimationFrame(() => {
+				drawLine(nativeEvent);
+			});
+		},
+		[drawLine]
+	);
 
-	const handleMouseUp = () => {
+	// Handle mouse up event
+	const handleMouseUp = useCallback(() => {
 		canvasRef.current.isDrawing = false;
 		if (isDrawing) {
 			saveCanvasState();
 			setIsDrawing(false);
 		}
-	};
+	}, [isDrawing, saveCanvasState, setIsDrawing]);
 
+	// Handle touch start event
 	const handleTouchStart = (e) => {
 		const touch = e.touches[0];
 		const offsetX =
@@ -201,6 +299,7 @@ const Whiteboard = () => {
 		handleMouseDown({ nativeEvent: { offsetX, offsetY } });
 	};
 
+	// Handle touch move event
 	const handleTouchMove = (e) => {
 		e.preventDefault();
 		const touch = e.touches[0];
@@ -211,18 +310,12 @@ const Whiteboard = () => {
 		handleMouseMove({ nativeEvent: { offsetX, offsetY } });
 	};
 
-	const handleTouchEnd = (e) => {
+	// Handle touch end event
+	const handleTouchEnd = () => {
 		handleMouseUp();
 	};
 
-	const saveCanvasState = () => {
-		const dataUrl = canvasRef.current.toDataURL();
-		const newHistory = canvasHistory.slice(0, historyIndex + 1);
-		newHistory.push(dataUrl);
-		setCanvasHistory(newHistory);
-		setHistoryIndex(newHistory.length - 1);
-	};
-
+	// Clear the canvas for a new page
 	const handleNewPage = () => {
 		const canvas = canvasRef.current;
 		const context = canvas.getContext("2d");
@@ -231,6 +324,7 @@ const Whiteboard = () => {
 		setHistoryIndex(-1);
 	};
 
+	// Save the current canvas as an image
 	const handleSavePage = () => {
 		const canvas = canvasRef.current;
 		const tempCanvas = document.createElement("canvas");
@@ -248,10 +342,12 @@ const Whiteboard = () => {
 		link.click();
 	};
 
+	// Placeholder function for sharing the page
 	const handleSharePage = () => {
 		alert("Share functionality to be implemented");
 	};
 
+	// Undo the last action
 	const handleUndo = () => {
 		if (historyIndex > 0) {
 			const newIndex = historyIndex - 1;
@@ -264,6 +360,7 @@ const Whiteboard = () => {
 		}
 	};
 
+	// Redo the last undone action
 	const handleRedo = () => {
 		if (historyIndex < canvasHistory.length - 1) {
 			const newIndex = historyIndex + 1;
@@ -272,6 +369,7 @@ const Whiteboard = () => {
 		}
 	};
 
+	// Restore the canvas from a saved state
 	const restoreCanvas = (dataUrl) => {
 		const canvas = canvasRef.current;
 		const context = canvas.getContext("2d");
@@ -283,12 +381,14 @@ const Whiteboard = () => {
 		};
 	};
 
+	// Clear the canvas
 	const clearCanvas = () => {
 		const canvas = canvasRef.current;
 		const context = canvas.getContext("2d");
 		context.clearRect(0, 0, canvas.width, canvas.height);
 	};
 
+	// Export the canvas as a PDF
 	const handleExport = () => {
 		const canvas = canvasRef.current;
 		const canvasWidth = canvas.width / 2;
@@ -312,6 +412,7 @@ const Whiteboard = () => {
 		pdf.save("whiteboard.pdf");
 	};
 
+	// Handle user logout
 	const handleLogout = () => {
 		socket.emit("userLeft", user);
 		logout(navigate);
