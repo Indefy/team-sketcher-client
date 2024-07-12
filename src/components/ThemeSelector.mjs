@@ -1,7 +1,7 @@
 import React from "react";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext.mjs";
 import "../styles/ThemeSelector.scss";
-import "../context/ThemeContext";
+import "../context/ThemeContext.mjs";
 import "../styles/themes.scss";
 
 const ThemeSelector = () => {

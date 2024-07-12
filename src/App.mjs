@@ -1,12 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import { ThemeProvider } from "./context/ThemeContext";
-import { WhiteboardProvider } from "./context/WhiteboardContext";
-import Whiteboard from "./components/Whiteboard";
-import Login from "./components/Login";
-import Register from "./components/Register";
-import ThemeSelector from "./components/ThemeSelector";
+import { AuthProvider } from "./context/AuthContext.mjs";
+import { ThemeProvider } from "./context/ThemeContext.mjs";
+import { WhiteboardProvider } from "./context/WhiteboardContext.mjs";
+import Whiteboard from "./components/Whiteboard.mjs";
+import Login from "./components/Login.mjs";
+import Register from "./components/Register.mjs";
+import ThemeSelector from "./components/ThemeSelector.mjs";
 import "./styles/global.scss";
 
 const App = () => {

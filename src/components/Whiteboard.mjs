@@ -6,15 +6,15 @@ import React, {
 	useCallback,
 } from "react";
 import io from "socket.io-client";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../context/AuthContext.mjs";
 import { useNavigate } from "react-router-dom";
 import { jsPDF } from "jspdf";
-import UserToolbar from "./UserToolbar";
-import UserList from "./UserList";
-import { useWhiteboardContext } from "../context/WhiteboardContext";
+import UserToolbar from "./UserToolbar.mjs";
+import UserList from "./UserList.mjs";
+import { useWhiteboardContext } from "../context/WhiteboardContext.mjs";
 
-import CustomToolbar from "./CustomToolbar";
-import ThemeSelector from "./ThemeSelector";
+import CustomToolbar from "./CustomToolbar.mjs";
+import ThemeSelector from "./ThemeSelector.mjs";
 import "../styles/Whiteboard.scss";
 import "../styles/neumorphism.scss";
 import "../styles/themes.scss";
@@ -41,6 +41,8 @@ const shadeColor = (color, percent) => {
 };
 
 const Whiteboard = () => {
+	const canvasRef = useRef(null);
+	const contextRef = useRef(null);
 	// Destructure context values from useWhiteboardContext
 	const {
 		brushSize,
@@ -59,8 +61,6 @@ const Whiteboard = () => {
 		setUsers,
 	} = useWhiteboardContext();
 
-	const canvasRef = useRef(null);
-	const contextRef = useRef(null);
 	const [backdropColor] = useState("");
 	const [canvasBackdropColor] = useState("#ffffff");
 	const { user, logout } = useContext(AuthContext);

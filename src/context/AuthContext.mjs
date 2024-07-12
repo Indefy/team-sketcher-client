@@ -18,7 +18,7 @@ const AuthProvider = ({ children }) => {
 		}
 	}, []);
 
-	const login = async (username, password, navigate) => {
+	const login = async (username, password) => {
 		try {
 			const { data } = await axios.post(
 				`${process.env.REACT_APP_SERVER_URL}/api/auth/login`,
@@ -36,7 +36,7 @@ const AuthProvider = ({ children }) => {
 		}
 	};
 
-	const register = async (username, password, navigate) => {
+	const register = async (username, password) => {
 		try {
 			const { data } = await axios.post(
 				`${process.env.REACT_APP_SERVER_URL}/api/auth/register`,

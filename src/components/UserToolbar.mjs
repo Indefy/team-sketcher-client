@@ -1,22 +1,18 @@
 import React from "react";
-import { useWhiteboardContext } from "../context/WhiteboardContext";
-import { useTheme } from "../context/ThemeContext";
+import { useWhiteboardContext } from "../context/WhiteboardContext.mjs";
 import "../styles/UserToolbar.scss";
 
 const UserToolbar = () => {
-	const { setBrushSize, setBrushType, setColor } = useWhiteboardContext();
-	const { muiTheme } = useTheme();
+	const { setBrushSize, setBrushType, setColor, brushSize, brushType, color } =
+		useWhiteboardContext();
 
 	return (
-		<div
-			className="user-toolbar-container"
-			style={{ background: muiTheme.gradient }}
-		>
+		<div className="user-toolbar-container">
 			<div className="toolbar-item">
 				<label htmlFor="brush-size">Brush Size:</label>
 				<select
 					id="brush-size"
-					defaultValue="5"
+					value={brushSize}
 					onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
 				>
 					<option value="1">1</option>
@@ -36,7 +32,7 @@ const UserToolbar = () => {
 				<label htmlFor="brush-type">Brush Type:</label>
 				<select
 					id="brush-type"
-					defaultValue="default"
+					value={brushType}
 					onChange={(e) => setBrushType(e.target.value)}
 				>
 					<option value="default">Default</option>
@@ -57,7 +53,7 @@ const UserToolbar = () => {
 					className="color-picker"
 					type="color"
 					id="color"
-					defaultValue="#000000"
+					value={color}
 					onChange={(e) => setColor(e.target.value)}
 				/>
 			</div>
